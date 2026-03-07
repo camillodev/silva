@@ -1,20 +1,21 @@
 {
-  "name": "openclaw",
+  "name": "silva",
   "version": "2026.3.7",
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
+  "description": "Silva AI Coworker — autonomous general-purpose AI agent",
   "keywords": [],
-  "homepage": "https://github.com/openclaw/openclaw#readme",
+  "homepage": "https://github.com/camillodev/silva#readme",
   "bugs": {
-    "url": "https://github.com/openclaw/openclaw/issues"
+    "url": "https://github.com/camillodev/silva/issues"
   },
   "license": "MIT",
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openclaw/openclaw.git"
+    "url": "git+https://github.com/camillodev/silva.git"
   },
   "bin": {
-    "openclaw": "openclaw.mjs"
+    "openclaw": "openclaw.mjs",
+    "silva": "openclaw.mjs"
   },
   "directories": {
     "doc": "docs",

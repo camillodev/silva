@@ -1,22 +1,22 @@
-# 🦞 OpenClaw — Personal AI Assistant
+# Silva — AI Coworker
+
+> Autonomous general-purpose AI agent. Fork of [OpenClaw](https://github.com/openclaw/openclaw) (MIT).
 
 <p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text-dark.png">
-        <img src="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text.png" alt="OpenClaw" width="500">
-    </picture>
-</p>
-
-<p align="center">
-  <strong>EXFOLIATE! EXFOLIATE!</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/openclaw/openclaw/actions/workflows/ci.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/openclaw/openclaw/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
-  <a href="https://github.com/openclaw/openclaw/releases"><img src="https://img.shields.io/github/v/release/openclaw/openclaw?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
-  <a href="https://discord.gg/clawd"><img src="https://img.shields.io/discord/1456350064065904867?label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Discord"></a>
+  <a href="https://github.com/camillodev/silva/actions/workflows/ci.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/camillodev/silva/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
+  <a href="https://github.com/camillodev/silva/releases"><img src="https://img.shields.io/github/v/release/camillodev/silva?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
 </p>
+
+## Setup
+
+```bash
+cp .env.example .env
+# Fill in your SILVA_GATEWAY_TOKEN and LLM keys
+pnpm install
+pnpm run build
+pnpm start
+```
 
 **OpenClaw** is a _personal AI assistant_ you run on your own devices.
 It answers you on the channels you already use (WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, BlueBubbles, IRC, Microsoft Teams, Matrix, Feishu, LINE, Mattermost, Nextcloud Talk, Nostr, Synology Chat, Tlon, Twitch, Zalo, Zalo Personal, WebChat). It can speak and listen on macOS/iOS/Android, and can render a live Canvas you control. The Gateway is just the control plane — the product is the assistant.
