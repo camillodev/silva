@@ -74,6 +74,18 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
   const { ctx, account, message, route } = prepared;
   const cfg = ctx.cfg;
   const runtime = ctx.runtime;
+  const effectiveReplyToMode: "off" | "first" | "all" = "all";
+  let silvaReactionsCleared = false;
+  const clearSilvaReactions = async () => {
+    if (silvaReactionsCleared) {
+      return;
+    }
+    silvaReactionsCleared = true;
+    if (!prepared.silvaReactions || !message.ts) {
+      return;
+    }
+    await prepared.silvaReactions.done(message.channel, message.ts);
+  };
 
   // Resolve agent identity for Slack chat:write.customize overrides.
   const outboundIdentity = resolveAgentOutboundIdentity(cfg, route.agentId);
@@ -121,7 +133,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
 
   const { statusThreadTs, isThreadReply } = resolveSlackThreadTargets({
     message,
-    replyToMode: prepared.replyToMode,
+    replyToMode: effectiveReplyToMode,
   });
 
   const messageTs = message.ts ?? message.event_ts;
@@ -132,7 +144,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
   // mark this to ensure only the first reply is threaded.
   const hasRepliedRef = { value: false };
   const replyPlan = createSlackReplyDeliveryPlan({
-    replyToMode: prepared.replyToMode,
+    replyToMode: effectiveReplyToMode,
     incomingThreadTs,
     messageTs,
     hasRepliedRef,
@@ -211,7 +223,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
     nativeStreaming: slackStreaming.nativeStreaming,
   });
   const streamThreadHint = resolveSlackStreamingThreadHint({
-    replyToMode: prepared.replyToMode,
+    replyToMode: effectiveReplyToMode,
     incomingThreadTs,
     messageTs,
     isThreadReply,
@@ -225,6 +237,8 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
   let usedReplyThreadTs: string | undefined;
 
   const deliverNormally = async (payload: ReplyPayload, forcedThreadTs?: string): Promise<void> => {
+    // Always clear temporary Silva reactions before posting visible reply text.
+    await clearSilvaReactions();
     const replyThreadTs = forcedThreadTs ?? replyPlan.nextThreadTs();
     await deliverReplies({
       replies: [payload],
@@ -234,7 +248,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
       runtime,
       textLimit: ctx.textLimit,
       replyThreadTs,
-      replyToMode: prepared.replyToMode,
+      replyToMode: effectiveReplyToMode,
       ...(slackIdentity ? { identity: slackIdentity } : {}),
     });
     // Record the thread ts only after confirmed delivery success.
@@ -254,6 +268,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
     let plannedThreadTs: string | undefined;
     try {
       if (!streamSession) {
+        await clearSilvaReactions();
         const streamThreadTs = replyPlan.nextThreadTs();
         plannedThreadTs = streamThreadTs;
         if (!streamThreadTs) {
@@ -479,6 +494,7 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
   }
 
   if (!anyReplyDelivered) {
+    await clearSilvaReactions();
     await draftStream.clear();
     if (prepared.isRoomish) {
       clearHistoryEntriesIfEnabled({
@@ -488,6 +504,12 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
       });
     }
     return;
+  }
+
+  // After first successful thread reply, keep 👀 until user validates (✅) or cancels (❌).
+  const inProgressTs = statusThreadTs ?? message.ts;
+  if (prepared.silvaReactions && inProgressTs) {
+    await prepared.silvaReactions.setWorking(message.channel, inProgressTs);
   }
 
   if (shouldLogVerbose()) {

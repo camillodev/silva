@@ -166,7 +166,16 @@ export function createSlackMessageHandler(params: {
           prepared.ctxPayload.MessageSidLast = ids[ids.length - 1];
         }
       }
-      await dispatchPreparedSlackMessage(prepared);
+      try {
+        await dispatchPreparedSlackMessage(prepared);
+      } catch (err) {
+        if (prepared.silvaReactions && prepared.message.ts) {
+          await prepared.silvaReactions
+            .done(prepared.message.channel, prepared.message.ts)
+            .catch(() => {});
+        }
+        throw err;
+      }
     },
     onError: (err) => {
       ctx.runtime.error?.(`slack inbound debounce flush failed: ${String(err)}`);

@@ -55,6 +55,11 @@ export class SlackReactionManager {
     }, SWAP_THRESHOLD_MS);
   }
 
+  /** Keep thread marked as in-progress with 👀. */
+  async setWorking(channel: string, ts: string): Promise<void> {
+    await this.set(WORKING_EMOJI, channel, ts).catch(() => {});
+  }
+
   /** Clear all Silva-owned reactions (⏳ and 👀). */
   async clearSilvaReactions(channel: string, ts: string): Promise<void> {
     if (this.swapTimer) {

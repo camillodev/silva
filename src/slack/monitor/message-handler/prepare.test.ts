@@ -520,6 +520,104 @@ describe("slack prepareSlackMessage inbound contract", () => {
     );
   });
 
+  it("handles approval intent in thread by setting done reaction and skipping dispatch", async () => {
+    const add = vi.fn().mockResolvedValue(undefined);
+    const remove = vi.fn().mockResolvedValue(undefined);
+    const get = vi.fn().mockResolvedValue({
+      message: { reactions: [] },
+    });
+    const authTest = vi.fn().mockResolvedValue({ user_id: "B1" });
+    const postMessage = vi.fn().mockResolvedValue({ ts: "1.003" });
+    const slackCtx = createInboundSlackCtx({
+      cfg: {
+        channels: { slack: { enabled: true, replyToMode: "all", groupPolicy: "open" } },
+      } as OpenClawConfig,
+      appClient: {
+        reactions: { add, remove, get },
+        auth: { test: authTest },
+        chat: { postMessage },
+      } as unknown as App["client"],
+      defaultRequireMention: false,
+      replyToMode: "all",
+    });
+    slackCtx.resolveUserName = async () => ({ name: "Alice" });
+    slackCtx.resolveChannelName = async () => ({ name: "general", type: "channel" });
+
+    const prepared = await prepareMessageWith(
+      slackCtx,
+      createSlackAccount({ replyToMode: "all" }),
+      createSlackMessage({
+        channel: "C123",
+        channel_type: "channel",
+        thread_ts: "100.000",
+        ts: "101.000",
+        text: "perfeito",
+      }),
+    );
+
+    expect(prepared).toBeNull();
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "C123",
+        timestamp: "100.000",
+        name: "white_check_mark",
+      }),
+    );
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it("handles cancel intent in thread by setting cancelled reaction and posting confirmation", async () => {
+    const add = vi.fn().mockResolvedValue(undefined);
+    const remove = vi.fn().mockResolvedValue(undefined);
+    const get = vi.fn().mockResolvedValue({
+      message: { reactions: [] },
+    });
+    const authTest = vi.fn().mockResolvedValue({ user_id: "B1" });
+    const postMessage = vi.fn().mockResolvedValue({ ts: "1.003" });
+    const slackCtx = createInboundSlackCtx({
+      cfg: {
+        channels: { slack: { enabled: true, replyToMode: "all", groupPolicy: "open" } },
+      } as OpenClawConfig,
+      appClient: {
+        reactions: { add, remove, get },
+        auth: { test: authTest },
+        chat: { postMessage },
+      } as unknown as App["client"],
+      defaultRequireMention: false,
+      replyToMode: "all",
+    });
+    slackCtx.resolveUserName = async () => ({ name: "Alice" });
+    slackCtx.resolveChannelName = async () => ({ name: "general", type: "channel" });
+
+    const prepared = await prepareMessageWith(
+      slackCtx,
+      createSlackAccount({ replyToMode: "all" }),
+      createSlackMessage({
+        channel: "C123",
+        channel_type: "channel",
+        thread_ts: "200.000",
+        ts: "201.000",
+        text: "cancela",
+      }),
+    );
+
+    expect(prepared).toBeNull();
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "C123",
+        timestamp: "200.000",
+        name: "x",
+      }),
+    );
+    expect(postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "C123",
+        thread_ts: "200.000",
+        text: "Ok, cancelei. 👍",
+      }),
+    );
+  });
+
   it("excludes thread_ts from top-level messages", async () => {
     const message = createSlackMessage({ text: "hello" });
 
