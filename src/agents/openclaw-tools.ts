@@ -10,6 +10,7 @@ import { createCanvasTool } from "./tools/canvas-tool.js";
 import type { AnyAgentTool } from "./tools/common.js";
 import { createComposioTool } from "./tools/composio-tool.js";
 import { createCronTool } from "./tools/cron-tool.js";
+import { createDraftTool } from "./tools/draft-tool.js";
 import { createGatewayTool } from "./tools/gateway-tool.js";
 import { createImageTool } from "./tools/image-tool.js";
 import { createMessageTool } from "./tools/message-tool.js";
@@ -203,6 +204,15 @@ export function createOpenClawTools(options?: {
       : []),
     // Pipedream: enabled by default unless explicitly disabled
     ...(options?.config?.tools?.pipedream?.enabled !== false ? [createPipedreamTool()] : []),
+    // Draft Approval: enabled for Slack sessions to gate write actions behind Block Kit buttons
+    ...(options?.agentChannel === "slack" && options?.currentChannelId
+      ? [
+          createDraftTool({
+            currentChannelId: options.currentChannelId,
+            currentThreadTs: options.currentThreadTs,
+          }),
+        ]
+      : []),
   ];
 
   const pluginTools = resolvePluginTools({
