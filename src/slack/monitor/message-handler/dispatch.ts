@@ -506,12 +506,6 @@ export async function dispatchPreparedSlackMessage(prepared: PreparedSlackMessag
     return;
   }
 
-  // After first successful thread reply, keep 👀 until user validates (✅) or cancels (❌).
-  const inProgressTs = statusThreadTs ?? message.ts;
-  if (prepared.silvaReactions && inProgressTs) {
-    await prepared.silvaReactions.setWorking(message.channel, inProgressTs);
-  }
-
   if (shouldLogVerbose()) {
     const finalCount = counts.final;
     logVerbose(

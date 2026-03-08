@@ -299,7 +299,7 @@
     "release:check": "node --import tsx scripts/release-check.ts",
     "restart": "bash scripts/restart-gateway-quick.sh",
     "start": "node scripts/run-node.mjs",
-    "status": "systemctl status openclaw",
+    "status": "pgrep -fl openclaw && echo '---' && tail -n 50 /tmp/openclaw-gateway.log 2>/dev/null || echo 'Gateway not running'",
     "test": "node scripts/test-parallel.mjs",
     "test:all": "pnpm lint && pnpm build && pnpm test && pnpm test:e2e && pnpm test:live && pnpm test:docker:all",
     "test:channels": "vitest run --config vitest.channels.config.ts",

@@ -4,8 +4,8 @@ read_when:
   - Planning Slack UX behavior for Silva in channels
   - Implementing thread-first behavior and reaction states in Slack
 owner: "silva"
-status: "draft"
-last_updated: "2026-03-07"
+status: "active"
+last_updated: "2026-03-08"
 title: "Silva Slack UX Reactions and Thread Pattern POC"
 ---
 
