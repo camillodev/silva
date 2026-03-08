@@ -600,4 +600,22 @@ export type ToolsConfig = {
       deny?: string[];
     };
   };
+  /** Composio integration tool config. */
+  composio?: {
+    /** Enable or disable the composio tool (default: true when COMPOSIO_API_KEY is set). */
+    enabled?: boolean;
+    /** Composio API key (falls back to COMPOSIO_API_KEY env var). */
+    apiKey?: SecretInput;
+    /** Default entity ID for connected accounts (default: "default"). */
+    entityId?: string;
+  };
+  /** Pipedream integration tool config. */
+  pipedream?: {
+    /** Enable or disable the pipedream tool (default: true). */
+    enabled?: boolean;
+    /** Pipedream API key for listing workflows (falls back to PIPEDREAM_API_KEY env var). */
+    apiKey?: SecretInput;
+    /** Shared secret for outbound webhook requests (falls back to PIPEDREAM_WEBHOOK_SECRET env var). */
+    webhookSecret?: SecretInput;
+  };
 };
