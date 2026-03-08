@@ -331,7 +331,8 @@
     "tui:dev": "OPENCLAW_PROFILE=dev CLAWDBOT_PROFILE=dev node scripts/run-node.mjs --dev tui",
     "ui:build": "node scripts/ui.js build",
     "ui:dev": "node scripts/ui.js dev",
-    "ui:install": "node scripts/ui.js install"
+    "ui:install": "node scripts/ui.js install",
+    "vps": "ssh -i ~/.ssh/oci_carol ubuntu@129.146.108.172"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "0.15.0",
