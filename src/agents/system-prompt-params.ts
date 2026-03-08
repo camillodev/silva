@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { OpenClawConfig } from "../config/config.js";
+import type { TenantConfig } from "../config/tenant.js";
 import { findGitRoot } from "../infra/git-root.js";
 import {
   formatUserTime,
@@ -30,6 +31,8 @@ export type SystemPromptRuntimeParams = {
   userTimezone: string;
   userTime?: string;
   userTimeFormat?: ResolvedTimeFormat;
+  /** Tenant-specific branding/context injected into the agent identity line. */
+  tenantConfig?: TenantConfig;
 };
 
 export function buildSystemPromptParams(params: {
@@ -38,6 +41,7 @@ export function buildSystemPromptParams(params: {
   runtime: Omit<RuntimeInfoInput, "agentId">;
   workspaceDir?: string;
   cwd?: string;
+  tenantConfig?: TenantConfig;
 }): SystemPromptRuntimeParams {
   const repoRoot = resolveRepoRoot({
     config: params.config,
@@ -56,6 +60,7 @@ export function buildSystemPromptParams(params: {
     userTimezone,
     userTime,
     userTimeFormat,
+    tenantConfig: params.tenantConfig,
   };
 }
 

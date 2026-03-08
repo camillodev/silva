@@ -1,6 +1,7 @@
 import { createHmac, createHash } from "node:crypto";
 import type { ReasoningLevel, ThinkLevel } from "../auto-reply/thinking.js";
 import { SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
+import type { TenantConfig } from "../config/tenant.js";
 import type { MemoryCitationsMode } from "../config/types.memory.js";
 import { listDeliverableMessageChannels } from "../utils/message-channel.js";
 import type { ResolvedTimeFormat } from "./date-time.js";
@@ -233,6 +234,8 @@ export function buildAgentSystemPrompt(params: {
     channel: string;
   };
   memoryCitationsMode?: MemoryCitationsMode;
+  /** Tenant branding injected into the agent identity line. */
+  tenantConfig?: TenantConfig;
 }) {
   const acpEnabled = params.acpEnabled !== false;
   const sandboxedRuntime = params.sandboxInfo?.enabled === true;
@@ -414,13 +417,19 @@ export function buildAgentSystemPrompt(params: {
   });
   const workspaceNotes = (params.workspaceNotes ?? []).map((note) => note.trim()).filter(Boolean);
 
+  // Build the agent identity line with optional tenant branding.
+  const tenantName = params.tenantConfig?.name?.trim();
+  const identityLine = tenantName
+    ? `You are Silva, the AI coworker for ${tenantName}.`
+    : "You are Silva, your AI coworker.";
+
   // For "none" mode, return just the basic identity line
   if (promptMode === "none") {
-    return "You are a personal assistant running inside OpenClaw.";
+    return identityLine;
   }
 
   const lines = [
-    "You are a personal assistant running inside OpenClaw.",
+    identityLine,
     "",
     "## Tooling",
     "Tool availability (filtered by policy):",
