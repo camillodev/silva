@@ -22,6 +22,22 @@ Priority:
 - Bug fixes and stability
 - Setup reliability and first-run UX
 
+## Strategic Memory: AI Agent Micro SaaS (2026-03-07)
+
+We captured an internal strategic analysis comparing Viktor-style autonomy patterns with CrewAI, LangGraph, and OpenClaw.
+
+Direction captured for project memory:
+
+- OpenClaw is the base runtime for niche AI assistant products.
+- Autonomy is built from combined systems (skills, heartbeat, gated crons, approvals, integrations), not one feature.
+- Markdown skills remain the default memory path until recall scale demands vector retrieval.
+- Multi-agent orchestration is optional and should be added only when a niche workflow justifies the complexity.
+- Productization gaps to solve outside core runtime: multi-tenancy, billing/metering, stronger approval flows, and admin dashboard.
+
+Canonical research note:
+
+- `docs/experiments/research/ai-agent-microsaas.md`
+
 Next priorities:
 
 - Supporting all major model providers

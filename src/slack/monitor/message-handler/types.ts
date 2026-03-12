@@ -1,6 +1,7 @@
 import type { FinalizedMsgContext } from "../../../auto-reply/templating.js";
 import type { ResolvedAgentRoute } from "../../../routing/resolve-route.js";
 import type { ResolvedSlackAccount } from "../../accounts.js";
+import type { SlackReactionManager } from "../../silva-reactions.js";
 import type { SlackMessageEvent } from "../../types.js";
 import type { SlackChannelConfigResolved } from "../channel-config.js";
 import type { SlackMonitorContext } from "../context.js";
@@ -21,4 +22,5 @@ export type PreparedSlackMessage = {
   ackReactionMessageTs?: string;
   ackReactionValue: string;
   ackReactionPromise: Promise<boolean> | null;
+  silvaReactions: SlackReactionManager | null;
 };

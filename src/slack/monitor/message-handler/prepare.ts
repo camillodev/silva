@@ -34,6 +34,8 @@ import { resolveSlackReplyToMode, type ResolvedSlackAccount } from "../../accoun
 import { reactSlackMessage } from "../../actions.js";
 import { sendMessageSlack } from "../../send.js";
 import { hasSlackThreadParticipation } from "../../sent-thread-cache.js";
+import { SlackReactionManager } from "../../silva-reactions.js";
+import { isApprovalIntent, isCancelIntent, replyInThread } from "../../silva-thread-reply.js";
 import { resolveSlackThreadContext } from "../../threading.js";
 import type { SlackMessageEvent } from "../../types.js";
 import {
@@ -53,6 +55,8 @@ import { resolveSlackThreadContextData } from "./prepare-thread-context.js";
 import type { PreparedSlackMessage } from "./types.js";
 
 const mentionRegexCache = new WeakMap<SlackMonitorContext, Map<string, RegExp[]>>();
+const DONE_EMOJI = "white_check_mark";
+const CANCELLED_EMOJI = "x";
 
 function resolveCachedMentionRegexes(
   ctx: SlackMonitorContext,
@@ -322,6 +326,27 @@ export async function prepareSlackMessage(params: {
 }): Promise<PreparedSlackMessage | null> {
   const { ctx, account, message, opts } = params;
   const cfg = ctx.cfg;
+  // #region agent log
+  fetch("http://127.0.0.1:7589/ingest/f28c045d-7f2c-4855-9a65-0df2056d7d39", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "526c6d" },
+    body: JSON.stringify({
+      sessionId: "526c6d",
+      runId: "pre-fix",
+      hypothesisId: "H4",
+      location: "src/slack/monitor/message-handler/prepare.ts:prepareSlackMessage:entry",
+      message: "prepareSlackMessage entry",
+      data: {
+        channel: message.channel,
+        ts: message.ts,
+        threadTs: message.thread_ts,
+        source: opts.source,
+        textLength: (message.text ?? "").length,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const conversation = await resolveSlackConversationContext({ ctx, account, message });
   const {
     channelInfo,
@@ -340,6 +365,26 @@ export async function prepareSlackMessage(params: {
     conversation,
   });
   if (!authorization) {
+    // #region agent log
+    fetch("http://127.0.0.1:7589/ingest/f28c045d-7f2c-4855-9a65-0df2056d7d39", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "526c6d" },
+      body: JSON.stringify({
+        sessionId: "526c6d",
+        runId: "pre-fix",
+        hypothesisId: "H2",
+        location:
+          "src/slack/monitor/message-handler/prepare.ts:prepareSlackMessage:authorization-null",
+        message: "prepareSlackMessage dropped by authorization",
+        data: {
+          channel: message.channel,
+          ts: message.ts,
+          channelType: message.channel_type,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return null;
   }
   const { senderId, allowFromLower } = authorization;
@@ -417,6 +462,29 @@ export async function prepareSlackMessage(params: {
   if (isRoom && !channelUserAuthorized) {
     logVerbose(`Blocked unauthorized slack sender ${senderId} (not in channel users)`);
     return null;
+  }
+
+  // Thread intent fast path for Viktor-like UX:
+  // - Approval message in thread => set ✅ on parent and stop.
+  // - Cancel message in thread => set ❌ on parent, confirm in thread, and stop.
+  const trimmedText = (message.text ?? "").trim();
+  if (isThreadReply && threadTs && trimmedText) {
+    const reactions = new SlackReactionManager(ctx.app.client, ctx.botToken);
+    if (isApprovalIntent(trimmedText)) {
+      await reactions.set(DONE_EMOJI, message.channel, threadTs).catch(() => {});
+      return null;
+    }
+    if (isCancelIntent(trimmedText)) {
+      await reactions.set(CANCELLED_EMOJI, message.channel, threadTs).catch(() => {});
+      await replyInThread(
+        ctx.app.client,
+        ctx.botToken,
+        message.channel,
+        threadTs,
+        "Ok, cancelei. 👍",
+      ).catch(() => {});
+      return null;
+    }
   }
 
   const allowTextCommands = shouldHandleTextCommands({
@@ -532,10 +600,19 @@ export async function prepareSlackMessage(params: {
   }
   const { rawBody, effectiveDirectMedia } = resolvedMessageContent;
 
-  const ackReaction = resolveAckReaction(cfg, route.agentId, {
-    channel: "slack",
-    accountId: account.accountId,
-  });
+  const silvaReactions = message.ts ? new SlackReactionManager(ctx.app.client, ctx.botToken) : null;
+  if (silvaReactions && message.ts) {
+    // POC UX contract: reaction-first feedback in Slack.
+    await silvaReactions.startProcessing(message.channel, message.ts);
+  }
+
+  const ackReaction =
+    silvaReactions === null
+      ? resolveAckReaction(cfg, route.agentId, {
+          channel: "slack",
+          accountId: account.accountId,
+        })
+      : "";
   const ackReactionValue = ackReaction ?? "";
 
   const shouldAckReaction = () =>
@@ -783,6 +860,28 @@ export async function prepareSlackMessage(params: {
     logVerbose(`slack inbound: channel=${message.channel} from=${slackFrom} preview="${preview}"`);
   }
 
+  // #region agent log
+  fetch("http://127.0.0.1:7589/ingest/f28c045d-7f2c-4855-9a65-0df2056d7d39", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "526c6d" },
+    body: JSON.stringify({
+      sessionId: "526c6d",
+      runId: "pre-fix",
+      hypothesisId: "H3",
+      location: "src/slack/monitor/message-handler/prepare.ts:prepareSlackMessage:return",
+      message: "prepareSlackMessage produced dispatch payload",
+      data: {
+        channel: message.channel,
+        ts: message.ts,
+        replyTarget,
+        isDirectMessage,
+        isThreadReply,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   return {
     ctx,
     account,
@@ -799,5 +898,6 @@ export async function prepareSlackMessage(params: {
     ackReactionMessageTs,
     ackReactionValue,
     ackReactionPromise,
+    silvaReactions,
   };
 }
