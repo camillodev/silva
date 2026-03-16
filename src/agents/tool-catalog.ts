@@ -36,6 +36,7 @@ const CORE_TOOL_SECTION_ORDER: Array<{ id: string; label: string }> = [
   { id: "nodes", label: "Nodes" },
   { id: "agents", label: "Agents" },
   { id: "media", label: "Media" },
+  { id: "integrations", label: "Integrations" },
 ];
 
 const CORE_TOOL_DEFINITIONS: CoreToolDefinition[] = [
@@ -230,6 +231,22 @@ const CORE_TOOL_DEFINITIONS: CoreToolDefinition[] = [
     label: "tts",
     description: "Text-to-speech conversion",
     sectionId: "media",
+    profiles: [],
+    includeInOpenClawGroup: true,
+  },
+  {
+    id: "composio",
+    label: "composio",
+    description: "Execute actions on 100+ apps (Linear, Notion, Gmail, Google Calendar, GitHub…)",
+    sectionId: "integrations",
+    profiles: [],
+    includeInOpenClawGroup: true,
+  },
+  {
+    id: "pipedream",
+    label: "pipedream",
+    description: "Trigger Pipedream workflows (2000+ app integrations)",
+    sectionId: "integrations",
     profiles: [],
     includeInOpenClawGroup: true,
   },

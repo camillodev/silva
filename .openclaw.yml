@@ -1,0 +1,7 @@
+tools:
+  alsoAllow:
+    - composio
+    - pipedream
+  composio:
+    enabled: true
+    entityId: default   # hello@rafaelcamillo.com como padrão

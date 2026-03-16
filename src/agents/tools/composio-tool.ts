@@ -41,11 +41,19 @@ export function createComposioTool(): AnyAgentTool {
   return {
     label: "composio",
     name: "composio",
-    description: `Execute actions on 100+ apps (Gmail, Notion, Linear, GitHub, Slack, etc.) via Composio.
-Use action="list_apps" to discover available integrations.
+    description: `Execute actions on 100+ apps via Composio (Linear, Notion, Gmail, Google Calendar, GitHub, Slack, etc.).
+
+Available integrations for this instance:
+- Linear: issues, projects, comments, cycles (composioAction prefix: LINEAR_)
+- Notion: pages, databases, blocks (composioAction prefix: NOTION_)
+- Gmail hello@rafaelcamillo.com: entityId="default" (composioAction prefix: GMAIL_)
+- Gmail camillodeveloper@gmail.com: entityId="dev" (composioAction prefix: GMAIL_)
+- Google Calendar: events, schedules (composioAction prefix: GOOGLECALENDAR_)
+
+Use action="list_apps" to discover all available integrations.
 Use action="list_actions" with filterByApp to find specific action IDs.
-Use action="execute" with composioAction (e.g. "GMAIL_SEND_EMAIL") and params to run an action.
-The user must connect apps at https://app.composio.dev before they can be used.`,
+Use action="execute" with composioAction and params to run an action.
+Connect apps at https://app.composio.dev before use.`,
     parameters: ComposioToolSchema,
     execute: async (_toolCallId, args) => {
       const p = args as Record<string, unknown>;
